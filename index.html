@@ -1,3 +1,4 @@
+
 	<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
@@ -857,13 +858,12 @@ margin-bottom:60px;
 
         <!-- Modal Body -->
         <div class="modal-body">
-          <div id="launch-buttons" class="mb-3">
-          Quick launch
+             <div id="launch-buttons" class="mb-3">
             <!-- Dynamically added buttons will appear here -->
           </div>
 
           <!-- Add/Edit Button Form -->
-          <button id="toggleFormButton" class="btn btn-success" data-toggle="collapse" data-target="#addEditButton">Add launch button</button>
+          <button id="toggleFormButton" class="btn btn-success" data-toggle="collapse" data-target="#addEditButton">Add New Button</button>
           <div id="addEditButton" class="collapse mt-3">
             <form id="newButtonForm">
               <div class="form-group">
@@ -873,6 +873,17 @@ margin-bottom:60px;
               <div class="form-group">
                 <label for="buttonName">Button Name:</label>
                 <input type="text" class="form-control" id="buttonName" required>
+              </div>
+              <div class="form-group">
+                <label>Open Link:</label><br>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="openType" id="openNewTab" value="newTab" checked>
+                  <label class="form-check-label" for="openNewTab">In New Tab</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="openType" id="openNewWindow" value="newWindow">
+                  <label class="form-check-label" for="openNewWindow">In New Window</label>
+                </div>
               </div>
               <div class="form-group">
                 <label>Window Size:</label><br>
@@ -899,6 +910,7 @@ margin-bottom:60px;
               </div>
             </form>
           </div>
+      
           
        
     <br>
@@ -929,46 +941,168 @@ margin-bottom:60px;
 </div>  
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     <script>
- document.getElementById('filterInput').addEventListener('input', function () {
-    const filterValue = this.value.toLowerCase();
-    const cards = document.querySelectorAll('.card-item');
-    let hasMatch = false; // Flag to track if any cards are visible
+  const launchButtonsContainer = document.getElementById('launch-buttons');
+  const newButtonForm = document.getElementById('newButtonForm');
+  const toggleFormButton = document.getElementById('toggleFormButton');
+  const saveButton = document.getElementById('saveButton');
+  const cancelButton = document.getElementById('cancelButton');
 
-    cards.forEach(card => {
-        const cardText = card.innerText.toLowerCase();
-        const cardCategory = card.getAttribute('data-category').toLowerCase();
-        
-        // Check if the filter value matches either the card text or category
-        if (cardText.includes(filterValue) || cardCategory.includes(filterValue)) {
-            card.classList.remove('d-none');
-            hasMatch = true; // A match is found
-        } else {
-            card.classList.add('d-none');
-        }
+  let editingButton = null;
+
+  // Load buttons from localStorage
+  function loadButtons() {
+    const buttons = JSON.parse(localStorage.getItem('launchButtons')) || [];
+    buttons.forEach(button => createButton(button));
+  }
+
+  // Save buttons to localStorage
+  function saveButtons() {
+    const buttons = [];
+    document.querySelectorAll('.launch-button').forEach(btn => {
+      buttons.push({
+        url: btn.dataset.url,
+        name: btn.dataset.name,
+        size: btn.dataset.size,
+        openType: btn.dataset.openType
+      });
     });
+    localStorage.setItem('launchButtons', JSON.stringify(buttons));
+  }
 
-    // Show or hide the "No Results" message based on matches
-    const noResultsMessage = document.getElementById('noResultsMessage');
-    if (hasMatch) {
-        noResultsMessage.classList.add('d-none');
-    } else {
-        noResultsMessage.classList.remove('d-none');
+  // Create and append a button
+  function createButton({ url, name, size, openType }) {
+    const buttonDiv = document.createElement('div');
+    buttonDiv.className = 'btn-group mb-2';
+
+    const button = document.createElement('button');
+    button.className = 'btn btn-sq-lg btn-outline-primary launch-button';
+    button.dataset.url = url;
+    button.dataset.name = name;
+    button.dataset.size = size;
+    button.dataset.openType = openType;
+    button.innerHTML = `<i class='fa fa-external-link'></i><br>${name}`;
+
+    // Open window or tab on click
+    button.onclick = () => {
+      if (openType === 'newTab') {
+        window.open(url, '_blank');
+      } else {
+        openWindow(url, size);
+      }
+    };
+
+    const dropdown = document.createElement('div');
+    dropdown.className = 'dropdown';
+    dropdown.innerHTML = `
+      <button class="btn btn-outline-secondary dropdown-toggle" data-toggle="dropdown"></button>
+      <div class="dropdown-menu">
+        <a class="dropdown-item" href="#" onclick="editButton(this)">Edit</a>
+        <a class="dropdown-item text-danger" href="#" onclick="removeButton(this)">Remove</a>
+      </div>`;
+
+    buttonDiv.appendChild(button);
+    buttonDiv.appendChild(dropdown);
+    launchButtonsContainer.appendChild(buttonDiv);
+  }
+
+  // Open a new window
+  function openWindow(url, size) {
+    let width, height, left, top;
+
+    switch (size) {
+      case 'small':
+        width = screen.width * 0.4;
+        height = screen.height * 0.4;
+        break;
+      case 'medium':
+        width = screen.width * 0.6;
+        height = screen.height * 0.6;
+        break;
+      case 'large':
+        width = screen.width * 0.8;
+        height = screen.height * 0.8;
+        break;
+      case 'full':
+        width = screen.width * 0.9;
+        height = screen.height * 0.9;
+        break;
+      default:
+        width = screen.width * 0.5;
+        height = screen.height * 0.5;
     }
-});
 
+    left = (screen.width - width) / 2;
+    top = (screen.height - height) / 2;
 
-    </script>
+    window.open(url, '_blank', `width=${width},height=${height},top=${top},left=${left}`);
+  }
+
+  // Add or edit button
+  newButtonForm.onsubmit = (e) => {
+    e.preventDefault();
+    const url = document.getElementById('buttonURL').value;
+    const name = document.getElementById('buttonName').value;
+    const size = document.querySelector('input[name="windowSize"]:checked').value;
+    const openType = document.querySelector('input[name="openType"]:checked').value;
+
+    if (editingButton) {
+      // Update existing button
+      editingButton.dataset.url = url;
+      editingButton.dataset.name = name;
+      editingButton.dataset.size = size;
+      editingButton.dataset.openType = openType;
+      editingButton.innerHTML = `<i class='fa fa-external-link'></i><br>${name}`;
+      editingButton = null;
+      saveButton.textContent = 'Add';
+    } else {
+      // Create new button
+      createButton({ url, name, size, openType });
+    }
+
+    saveButtons();
+    newButtonForm.reset();
+    $('#addEditButton').collapse('hide');
+  };
+
+  // Edit button
+  function editButton(el) {
+    const button = el.closest('.btn-group').querySelector('.launch-button');
+    document.getElementById('buttonURL').value = button.dataset.url;
+    document.getElementById('buttonName').value = button.dataset.name;
+    document.querySelector(`input[value="${button.dataset.size}"]`).checked = true;
+    document.querySelector(`input[value="${button.dataset.openType}"]`).checked = true;
+    editingButton = button;
+    saveButton.textContent = 'Save';
+    $('#addEditButton').collapse('show');
+  }
+
+  // Remove button
+  function removeButton(el) {
+    el.closest('.btn-group').remove();
+    saveButtons();
+  }
+
+  // Cancel button
+  cancelButton.onclick = () => {
+    newButtonForm.reset();
+    editingButton = null;
+    saveButton.textContent = 'Add';
+    $('#addEditButton').collapse('hide');
+  };
+
+  // Initialize
+  loadButtons();
+</script>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+   
