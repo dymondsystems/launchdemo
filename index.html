@@ -1094,7 +1094,36 @@ margin-bottom:60px;
   // Initialize
   loadButtons();
 </script>
-    
+        <script>
+ document.getElementById('filterInput').addEventListener('input', function () {
+    const filterValue = this.value.toLowerCase();
+    const cards = document.querySelectorAll('.card-item');
+    let hasMatch = false; // Flag to track if any cards are visible
+
+    cards.forEach(card => {
+        const cardText = card.innerText.toLowerCase();
+        const cardCategory = card.getAttribute('data-category').toLowerCase();
+        
+        // Check if the filter value matches either the card text or category
+        if (cardText.includes(filterValue) || cardCategory.includes(filterValue)) {
+            card.classList.remove('d-none');
+            hasMatch = true; // A match is found
+        } else {
+            card.classList.add('d-none');
+        }
+    });
+
+    // Show or hide the "No Results" message based on matches
+    const noResultsMessage = document.getElementById('noResultsMessage');
+    if (hasMatch) {
+        noResultsMessage.classList.add('d-none');
+    } else {
+        noResultsMessage.classList.remove('d-none');
+    }
+});
+
+
+    </script>
     
     
     
